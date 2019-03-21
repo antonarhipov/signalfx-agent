@@ -7,7 +7,10 @@ import (
 	"net/http"
 )
 
-const nodeStatsEndpoint = "_nodes/_local/stats/transport,http,process,jvm,indices,thread_pool"
+const (
+	nodeStatsEndpoint = "_nodes/_local/stats/transport,http,process,jvm,indices,thread_pool"
+	clusterHealthStatsEndpoint = "_cluster/health"
+)
 
 type esClient struct {
 	host       string
@@ -21,6 +24,7 @@ type esClient struct {
 // ESHttpClient holds methods hitting various ES stats endpoints
 type ESHttpClient interface {
 	GetNodeAndThreadPoolStats() (*NodeStatsOutput, error)
+	GetClusterStats() (*ClusterStatsOutput, error)
 }
 
 // NewESClient creates a new esClient
@@ -40,6 +44,26 @@ func NewESClient(host string, port string, useHTTPS bool, username string, passw
 		password:   password,
 		httpClient: httpClient,
 	}
+}
+
+// Method to fetch cluster stats
+func (c *esClient) GetClusterStats() (*ClusterStatsOutput, error) {
+	url := fmt.Sprintf("%s://%s:%s/%s", c.scheme, c.host, c.port, clusterHealthStatsEndpoint)
+
+	body, err := get(url, c.username, c.password, *c.httpClient)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var clusterStatsOutput ClusterStatsOutput
+	err = json.Unmarshal(body, &clusterStatsOutput)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &clusterStatsOutput, nil
 }
 
 // Method to fetch node stats

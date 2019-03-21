@@ -49,6 +49,9 @@ type Config struct {
 	EnableEnhancedTransportStats bool `yaml:"enableEnhancedTransportStats"`
 	// ThreadPools to report threadpool node stats on
 	ThreadPools []string `yaml:"threadPools" default:"[\"search\", \"index\"]"`
+	// Enable Cluster level stats. These stats report only from master eligible
+	// Elasticserach nodes
+	EnableEnhancedClusterHealthStats bool `yaml:"enableEnhancedClusterHealthStats"`
 }
 
 // Monitor for conviva metrics
@@ -69,6 +72,7 @@ func (m *Monitor) Configure(conf *Config) error {
 	m.ctx, m.cancel = context.WithCancel(context.Background())
 
 	utils.RunOnInterval(m.ctx, func() {
+		// Collect Node level stats
 		nodeStatsOutput, err := esClient.GetNodeAndThreadPoolStats()
 
 		if err != nil {
@@ -92,12 +96,23 @@ func (m *Monitor) Configure(conf *Config) error {
 			client.TransportStatsGroup:  conf.EnableEnhancedTransportStats,
 		})
 
+		// Collect cluster level stats
+		clusterStatsOutput, err := esClient.GetClusterStats()
+
+		if err != nil {
+			logger.WithError(err).Errorf("Failed to GET cluster stats")
+			return
+		}
+
+		dps = append(dps, client.GetClusterStatsDatapoints(clusterStatsOutput, pluginInstanceDimension, conf.EnableEnhancedClusterHealthStats)...)
+
 		for i := range dps {
 			if dps[i] == nil {
 				continue
 			}
 			m.Output.SendDatapoint(dps[i])
 		}
+
 	}, time.Duration(conf.IntervalSeconds)*time.Second)
 	return nil
 }

@@ -12,6 +12,13 @@ func prepareGaugeHelper(metricName string, dims map[string]string, metricValue *
 	return sfxclient.Gauge(metricName, dims, *metricValue)
 }
 
+func prepareGaugeFHelper(metricName string, dims map[string]string, metricValue *float64) *datapoint.Datapoint {
+	if metricValue == nil {
+		return nil
+	}
+	return sfxclient.GaugeF(metricName, dims, *metricValue)
+}
+
 func prepareCumulativeHelper(metricName string, dims map[string]string, metricValue *int64) *datapoint.Datapoint {
 	if metricValue == nil {
 		return nil
