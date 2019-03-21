@@ -105,7 +105,7 @@ func (processStats *Process) fetchProcessStats(enhanced bool, dims map[string]st
 func fetchThreadPoolStats(enhanced bool, threadPools map[string]ThreadPoolStats, defaultDims map[string]string, selectedThreadPools map[string]bool) []*datapoint.Datapoint {
 	var out []*datapoint.Datapoint
 	for threadPool, stats := range threadPools {
-		if selectedThreadPools[threadPool] {
+		if !selectedThreadPools[threadPool] {
 			continue
 		}
 		out = append(out, threadPoolDatapoints(enhanced, threadPool, stats, defaultDims)...)

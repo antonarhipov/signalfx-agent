@@ -3,7 +3,6 @@ package elasticsearch
 import (
 	"context"
 	"errors"
-	"fmt"
 	"github.com/signalfx/signalfx-agent/internal/core/config"
 	"github.com/signalfx/signalfx-agent/internal/monitors"
 	"github.com/signalfx/signalfx-agent/internal/monitors/elasticsearch/client"
@@ -49,7 +48,7 @@ type Config struct {
 	// Enable enhanced Transport stats
 	EnableEnhancedTransportStats bool `yaml:"enableEnhancedTransportStats"`
 	// ThreadPools to report threadpool node stats on
-	ThreadPools []string `yaml:"threadPools" default:"{\"search\", \"index\"]"`
+	ThreadPools []string `yaml:"threadPools" default:"[\"search\", \"index\"]"`
 }
 
 // Monitor for conviva metrics
@@ -66,22 +65,21 @@ func init() {
 
 // Configure monitor
 func (m *Monitor) Configure(conf *Config) error {
-	fmt.Println(conf)
 	esClient := client.NewESClient(conf.Host, conf.Port, conf.UseHTTPS, conf.Username, conf.Password)
 	m.ctx, m.cancel = context.WithCancel(context.Background())
 
 	utils.RunOnInterval(m.ctx, func() {
-		nodeStatsOutput, err := esClient.GetNodeAndThreadPoolStats()
+		nodeStatsOutput, err, url := esClient.GetNodeAndThreadPoolStats()
 
 		if err != nil {
-			logger.Errorf("Failed to GET node stats", err)
+			logger.WithError(err).Errorf("Failed to GET node stats. URL: %s", url)
 			return
 		}
 
 		pluginInstanceDimension, err := prepareClusterDimension(conf.Cluster, nodeStatsOutput.ClusterName)
 
 		if err != nil {
-			logger.Errorf("Failed to create plugin_instance dimension", err)
+			logger.WithError(err).Errorf("Failed to prepare plugin_instance dimension")
 			return
 		}
 
@@ -111,7 +109,7 @@ func prepareClusterDimension(userProvidedClusterName string, queriedClusterName 
 
 	if clusterName == "" {
 		if queriedClusterName == nil {
-			return nil, errors.New("Failed to get cluster name from node")
+			return nil, errors.New("Failed to get cluster name from Elasticsearch API")
 		}
 		clusterName = *queriedClusterName
 	}
