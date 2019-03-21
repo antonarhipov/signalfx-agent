@@ -153,11 +153,6 @@ type QueryCache struct {
 // of Elasticsearch. Known as QuertyCache after ES 2.0.
 type FilterCache struct {
 	MemorySizeInBytes *int64 `json:"memory_size_in_bytes"`
-	//TotalCount        *int64 `json:"total_count"`
-	//HitCount          *int64 `json:"hit_count"`
-	//MissCount         *int64 `json:"miss_count"`
-	//CacheSize         *int64 `json:"cache_size"`
-	//CacheCount        *int64 `json:"cache_count"`
 	Evictions *int64 `json:"evictions"`
 }
 
