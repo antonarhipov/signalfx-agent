@@ -19,7 +19,7 @@ type esClient struct {
 }
 
 type ESHttpClient interface {
-	GetNodeAndThreadPoolStats(*NodeStatsOutput) error
+	GetNodeAndThreadPoolStats() (*NodeStatsOutput, error)
 }
 
 func NewESClient(host string, port string, useHTTPS bool, username string, password string) ESHttpClient {
@@ -41,21 +41,23 @@ func NewESClient(host string, port string, useHTTPS bool, username string, passw
 }
 
 // Method to fetch node stats
-func (c *esClient) GetNodeAndThreadPoolStats(result *NodeStatsOutput) error {
+func (c *esClient) GetNodeAndThreadPoolStats() (*NodeStatsOutput, error) {
 	url := fmt.Sprintf("%s://%s:%s/%s", c.scheme, c.host, c.port, nodeStatsEndpoint)
 
 	body, err := get(url, c.username, c.password, *c.httpClient)
 
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = json.Unmarshal(body, &result)
+	var nodeStatsOutput NodeStatsOutput
+	err = json.Unmarshal(body, &nodeStatsOutput)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &nodeStatsOutput, nil
 }
 
 // Fetches response from the given URL

@@ -71,8 +71,7 @@ func (m *Monitor) Configure(conf *Config) error {
 	m.ctx, m.cancel = context.WithCancel(context.Background())
 
 	utils.RunOnInterval(m.ctx, func() {
-		var nodeStatsOutput client.NodeStatsOutput
-		err := esClient.GetNodeAndThreadPoolStats(&nodeStatsOutput)
+		nodeStatsOutput, err := esClient.GetNodeAndThreadPoolStats()
 
 		if err != nil {
 			logger.Errorf("Failed to GET node stats", err)
@@ -86,7 +85,7 @@ func (m *Monitor) Configure(conf *Config) error {
 			return
 		}
 
-		dps := client.GetNodeStatsDatapoints(&nodeStatsOutput, pluginInstanceDimension, utils.StringSliceToMap(conf.ThreadPools), map[string]bool {
+		dps := client.GetNodeStatsDatapoints(nodeStatsOutput, pluginInstanceDimension, utils.StringSliceToMap(conf.ThreadPools), map[string]bool {
 			client.HTTPStatsGroup : conf.EnableEnhancedHTTPStats,
 			client.IndicesStatsGroup : conf.EnableEnhancedIndicesStats,
 			client.JVMStatsGroup : conf.EnableEnhancedJVMStats,
