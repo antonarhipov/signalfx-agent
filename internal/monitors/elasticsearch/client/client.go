@@ -18,12 +18,18 @@ type esClient struct {
 	httpClient *http.Client
 }
 
-type EShttpClient interface {
+type ESHttpClient interface {
 	GetNodeAndThreadPoolStats(*NodeStatsOutput) error
 }
 
-func NewESClient(host string, port string, scheme string, username string, password string) EShttpClient {
+func NewESClient(host string, port string, useHTTPS bool, username string, password string) ESHttpClient {
 	httpClient := &http.Client{}
+	scheme := "http"
+
+	if useHTTPS {
+		scheme = "https"
+	}
+
 	return &esClient{
 		host:       host,
 		port:       port,
@@ -56,7 +62,6 @@ func (c *esClient) GetNodeAndThreadPoolStats(result *NodeStatsOutput) error {
 func get(url string, username string, password string, httpClient http.Client) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 
@@ -64,7 +69,6 @@ func get(url string, username string, password string, httpClient http.Client) (
 	res, err := httpClient.Do(req)
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 	defer res.Body.Close()
@@ -72,7 +76,6 @@ func get(url string, username string, password string, httpClient http.Client) (
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		fmt.Println(err)
 		return nil, err
 	}
 

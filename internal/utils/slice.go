@@ -36,13 +36,3 @@ func RemoveAllElementsFromStringSlice(inputStrings []string, toRemoveStrings []s
 
 	return StringSetToSlice(inputStringsMap)
 }
-
-// Returns true if a slice contains the string `s`, false otherwise
-func StringInSlice(s string, slice []string) bool {
-	for _, b := range slice {
-		if b == s {
-			return true
-		}
-	}
-	return false
-}

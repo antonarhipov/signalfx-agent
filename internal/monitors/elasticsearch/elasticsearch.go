@@ -22,27 +22,34 @@ type Config struct {
 	config.MonitorConfig `yaml:",inline" acceptsEndpoints:"true"`
 	Host                 string `yaml:"host" validate:"required"`
 	Port                 string `yaml:"port" validate:"required"`
-	// Username used to access elasticsearch stats api
+	// Username used to access Elasticsearch stats API
 	Username string `yaml:"username"`
-	// Password used to access elasticsearch stats api
+	// Password used to access Elasticsearch stats API
 	Password string `yaml:"password" neverLog:"true"`
-	// Protocol used to connect: http or https
-	Protocol string `yaml:"protocol" default:"http"`
+	// Whether to use https or not
+	UseHTTPS bool `yaml:"useHTTPS"`
 	// Cluster name to which the node belongs. This is an optional config that
 	// will override the cluster name fetched from a node and will be used to
 	// populate the plugin_instance dimension
 	Cluster string `yaml:"cluster"`
-	// Version of the elasticsearch cluster
+	// Version of the Elasticsearch cluster
 	Version string `yaml:"version"`
 	// EnableClusterHealth enables reporting on the cluster health
 	EnableClusterHealth *bool `yaml:"enableClusterHealth" default:"true"`
-	// Node stat groups to collect enhanced metrics from. By default the monitor
-	// collects a subset of stats (see documentation for details) across the jvm,
-	// process, threadpool, transport, http indices groups. Only valid options for
-	// this option are transport, http, process, jvm, indices, thread_pool
-	NodeStatsGroups []string `yaml:"enhancedNodeStats" default:"[]"`
+	// Enable enhanced HTTP stats
+	EnableEnhancedHTTPStats bool `yaml:"enableEnhancedHTTPStats"`
+	// Enable enhanced Indices stats
+	EnableEnhancedIndicesStats bool `yaml:"enableEnhancedIndicesStats"`
+	// Enable enhanced JVM stats
+	EnableEnhancedJVMStats bool `yaml:"enableEnhancedJVMStats"`
+	// Enable enhanced Process stats
+	EnableEnhancedProcessStats bool `yaml:"enableEnhancedProcessStats"`
+	// Enable enhanced ThreadPool stats
+	EnableEnhancedThreadPoolStats bool `yaml:"enableEnhancedThreadPoolStats"`
+	// Enable enhanced Transport stats
+	EnableEnhancedTransportStats bool `yaml:"enableEnhancedTransportStats"`
 	// ThreadPools to report threadpool node stats on
-	ThreadPools []string `yaml:"threadPools"`
+	ThreadPools []string `yaml:"threadPools" default:"{\"search\", \"index\"]"`
 }
 
 // Monitor for conviva metrics
@@ -60,11 +67,8 @@ func init() {
 // Configure monitor
 func (m *Monitor) Configure(conf *Config) error {
 	fmt.Println(conf)
-	esClient := client.NewESClient(conf.Host, conf.Port, conf.Protocol, conf.Username, conf.Password)
+	esClient := client.NewESClient(conf.Host, conf.Port, conf.UseHTTPS, conf.Username, conf.Password)
 	m.ctx, m.cancel = context.WithCancel(context.Background())
-
-	threadPools := []string{"search", "index"}
-	threadPools = append(threadPools, conf.ThreadPools...)
 
 	utils.RunOnInterval(m.ctx, func() {
 		var nodeStatsOutput client.NodeStatsOutput
@@ -82,7 +86,14 @@ func (m *Monitor) Configure(conf *Config) error {
 			return
 		}
 
-		dps := client.GetNodeStatsDatapoints(&nodeStatsOutput, pluginInstanceDimension, threadPools, conf.NodeStatsGroups)
+		dps := client.GetNodeStatsDatapoints(&nodeStatsOutput, pluginInstanceDimension, utils.StringSliceToMap(conf.ThreadPools), map[string]bool {
+			client.HTTPStatsGroup : conf.EnableEnhancedHTTPStats,
+			client.IndicesStatsGroup : conf.EnableEnhancedIndicesStats,
+			client.JVMStatsGroup : conf.EnableEnhancedJVMStats,
+			client.ProcessStatsGroup : conf.EnableEnhancedProcessStats,
+			client.ThreadpoolStatsGroup : conf.EnableEnhancedThreadPoolStats,
+			client.TransportStatsGroup : conf.EnableEnhancedTransportStats,
+		})
 
 		for i := range dps {
 			if dps[i] == nil {
@@ -106,7 +117,9 @@ func prepareClusterDimension(userProvidedClusterName string, queriedClusterName 
 		clusterName = *queriedClusterName
 	}
 
+	// "plugin_instance" dimension is added to maintain backwards compatibility with built-in content
 	dims["plugin_instance"] = clusterName
+	dims["cluster"] = clusterName
 
 	return dims, nil
 }

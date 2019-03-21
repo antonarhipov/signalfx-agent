@@ -6,30 +6,30 @@ import (
 )
 
 const (
-	transportStatsGroup = "transport"
-	httpStatsGroup      = "http"
-	//indicesStatsGroup = "indices"
-	jvmStatsGroup        = "jvm"
-	threadpoolStatsGroup = "thread_pool"
-	processStatsGroup    = "process"
+	TransportStatsGroup = "transport"
+	HTTPStatsGroup      = "http"
+	IndicesStatsGroup = "indices"
+	JVMStatsGroup        = "jvm"
+	ThreadpoolStatsGroup = "thread_pool"
+	ProcessStatsGroup    = "process"
 )
 
 // Method to fetch node stats
-func GetNodeStatsDatapoints(nodeStatsOutput *NodeStatsOutput, defaultDims map[string]string, selectedThreadPools []string, nodeStatsGroups []string) []*datapoint.Datapoint {
+func GetNodeStatsDatapoints(nodeStatsOutput *NodeStatsOutput, defaultDims map[string]string, selectedThreadPools map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
 	var out []*datapoint.Datapoint
 	for _, nodeStats := range nodeStatsOutput.NodeStats {
-		out = append(out, GetNodeStatsDatapointsHelper(nodeStats, defaultDims, selectedThreadPools, nodeStatsGroups)...)
+		out = append(out, GetNodeStatsDatapointsHelper(nodeStats, defaultDims, selectedThreadPools, nodeStatsGroupEnhancedOption)...)
 	}
 	return out
 }
 
-func GetNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]string, selectedThreadPools []string, nodeStatsGroups []string) []*datapoint.Datapoint {
+func GetNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]string, selectedThreadPools  map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
 	var dps []*datapoint.Datapoint
-	dps = append(dps, nodeStats.Jvm.fetchJVMStats(utils.StringInSlice(jvmStatsGroup, nodeStatsGroups), defaultDims)...)
-	dps = append(dps, nodeStats.Process.fetchProcessStats(utils.StringInSlice(processStatsGroup, nodeStatsGroups), defaultDims)...)
-	dps = append(dps, nodeStats.Transport.fetchTransportStats(utils.StringInSlice(transportStatsGroup, nodeStatsGroups), defaultDims)...)
-	dps = append(dps, nodeStats.HTTP.fetchHTTPStats(utils.StringInSlice(httpStatsGroup, nodeStatsGroups), defaultDims)...)
-	dps = append(dps, fetchThreadPoolStats(utils.StringInSlice(threadpoolStatsGroup, nodeStatsGroups), nodeStats.ThreadPool, defaultDims, selectedThreadPools)...)
+	dps = append(dps, nodeStats.Jvm.fetchJVMStats(nodeStatsGroupEnhancedOption[JVMStatsGroup], defaultDims)...)
+	dps = append(dps, nodeStats.Process.fetchProcessStats(nodeStatsGroupEnhancedOption[ProcessStatsGroup], defaultDims)...)
+	dps = append(dps, nodeStats.Transport.fetchTransportStats(nodeStatsGroupEnhancedOption[TransportStatsGroup], defaultDims)...)
+	dps = append(dps, nodeStats.HTTP.fetchHTTPStats(nodeStatsGroupEnhancedOption[HTTPStatsGroup], defaultDims)...)
+	dps = append(dps, fetchThreadPoolStats(nodeStatsGroupEnhancedOption[ThreadpoolStatsGroup], nodeStats.ThreadPool, defaultDims, selectedThreadPools)...)
 	//dps = append(dps, nodeStats.Indices.fetchIndexStats(false, nil)...)
 	return dps
 }
@@ -102,10 +102,10 @@ func (processStats *Process) fetchProcessStats(enhanced bool, dims map[string]st
 	return out
 }
 
-func fetchThreadPoolStats(enhanced bool, threadPools map[string]ThreadPoolStats, defaultDims map[string]string, selectedThreadPools []string) []*datapoint.Datapoint {
+func fetchThreadPoolStats(enhanced bool, threadPools map[string]ThreadPoolStats, defaultDims map[string]string, selectedThreadPools map[string]bool) []*datapoint.Datapoint {
 	var out []*datapoint.Datapoint
 	for threadPool, stats := range threadPools {
-		if !utils.StringInSlice(threadPool, selectedThreadPools) {
+		if selectedThreadPools[threadPool] {
 			continue
 		}
 		out = append(out, threadPoolDatapoints(enhanced, threadPool, stats, defaultDims)...)
