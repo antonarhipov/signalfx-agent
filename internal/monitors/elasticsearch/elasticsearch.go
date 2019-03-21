@@ -83,13 +83,13 @@ func (m *Monitor) Configure(conf *Config) error {
 			return
 		}
 
-		dps := client.GetNodeStatsDatapoints(nodeStatsOutput, pluginInstanceDimension, utils.StringSliceToMap(conf.ThreadPools), map[string]bool {
-			client.HTTPStatsGroup : conf.EnableEnhancedHTTPStats,
-			client.IndicesStatsGroup : conf.EnableEnhancedIndicesStats,
-			client.JVMStatsGroup : conf.EnableEnhancedJVMStats,
-			client.ProcessStatsGroup : conf.EnableEnhancedProcessStats,
-			client.ThreadpoolStatsGroup : conf.EnableEnhancedThreadPoolStats,
-			client.TransportStatsGroup : conf.EnableEnhancedTransportStats,
+		dps := client.GetNodeStatsDatapoints(nodeStatsOutput, pluginInstanceDimension, utils.StringSliceToMap(conf.ThreadPools), map[string]bool{
+			client.HTTPStatsGroup:       conf.EnableEnhancedHTTPStats,
+			client.IndicesStatsGroup:    conf.EnableEnhancedIndicesStats,
+			client.JVMStatsGroup:        conf.EnableEnhancedJVMStats,
+			client.ProcessStatsGroup:    conf.EnableEnhancedProcessStats,
+			client.ThreadpoolStatsGroup: conf.EnableEnhancedThreadPoolStats,
+			client.TransportStatsGroup:  conf.EnableEnhancedTransportStats,
 		})
 
 		for i := range dps {

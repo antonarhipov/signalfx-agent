@@ -6,9 +6,9 @@ import (
 )
 
 const (
-	TransportStatsGroup = "transport"
-	HTTPStatsGroup      = "http"
-	IndicesStatsGroup = "indices"
+	TransportStatsGroup  = "transport"
+	HTTPStatsGroup       = "http"
+	IndicesStatsGroup    = "indices"
 	JVMStatsGroup        = "jvm"
 	ThreadpoolStatsGroup = "thread_pool"
 	ProcessStatsGroup    = "process"
@@ -23,7 +23,7 @@ func GetNodeStatsDatapoints(nodeStatsOutput *NodeStatsOutput, defaultDims map[st
 	return out
 }
 
-func GetNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]string, selectedThreadPools  map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
+func GetNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]string, selectedThreadPools map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
 	var dps []*datapoint.Datapoint
 	dps = append(dps, nodeStats.Jvm.fetchJVMStats(nodeStatsGroupEnhancedOption[JVMStatsGroup], defaultDims)...)
 	dps = append(dps, nodeStats.Process.fetchProcessStats(nodeStatsGroupEnhancedOption[ProcessStatsGroup], defaultDims)...)
