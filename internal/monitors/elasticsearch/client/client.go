@@ -20,7 +20,7 @@ type esClient struct {
 
 // ESHttpClient holds methods hitting various ES stats endpoints
 type ESHttpClient interface {
-	GetNodeAndThreadPoolStats() (*NodeStatsOutput, string, error)
+	GetNodeAndThreadPoolStats() (*NodeStatsOutput, error)
 }
 
 // NewESClient creates a new esClient
@@ -43,44 +43,44 @@ func NewESClient(host string, port string, useHTTPS bool, username string, passw
 }
 
 // Method to fetch node stats
-func (c *esClient) GetNodeAndThreadPoolStats() (*NodeStatsOutput, string, error) {
+func (c *esClient) GetNodeAndThreadPoolStats() (*NodeStatsOutput, error) {
 	url := fmt.Sprintf("%s://%s:%s/%s", c.scheme, c.host, c.port, nodeStatsEndpoint)
 
 	body, err := get(url, c.username, c.password, *c.httpClient)
 
 	if err != nil {
-		return nil, url, err
+		return nil, err
 	}
 
 	var nodeStatsOutput NodeStatsOutput
 	err = json.Unmarshal(body, &nodeStatsOutput)
 
 	if err != nil {
-		return nil, url, err
+		return nil, err
 	}
 
-	return &nodeStatsOutput, url, nil
+	return &nodeStatsOutput, nil
 }
 
 // Fetches response from the given URL
 func get(url string, username string, password string, httpClient http.Client) ([]byte, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get url %s: %v", url, err)
 	}
 
 	req.SetBasicAuth(username, password)
 	res, err := httpClient.Do(req)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get url %s: %v", url, err)
 	}
 	defer res.Body.Close()
 
 	body, err := ioutil.ReadAll(res.Body)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get url %s: %v", url, err)
 	}
 
 	return body, nil
