@@ -5,6 +5,7 @@ import (
 	"github.com/signalfx/signalfx-agent/internal/utils"
 )
 
+// Groups of Node stats being that the monitor collects
 const (
 	TransportStatsGroup  = "transport"
 	HTTPStatsGroup       = "http"
@@ -14,18 +15,18 @@ const (
 	ProcessStatsGroup    = "process"
 )
 
-// Method to fetch node stats
+// GetNodeStatsDatapoints fetches datapoints for ES Node stats
 func GetNodeStatsDatapoints(nodeStatsOutput *NodeStatsOutput, defaultDims map[string]string, selectedThreadPools map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
 	var out []*datapoint.Datapoint
 	for _, nodeStats := range nodeStatsOutput.NodeStats {
-		out = append(out, GetNodeStatsDatapointsHelper(nodeStats, defaultDims, selectedThreadPools, nodeStatsGroupEnhancedOption)...)
+		out = append(out, getNodeStatsDatapointsHelper(nodeStats, defaultDims, selectedThreadPools, nodeStatsGroupEnhancedOption)...)
 	}
 	return out
 }
 
-func GetNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]string, selectedThreadPools map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
+func getNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]string, selectedThreadPools map[string]bool, nodeStatsGroupEnhancedOption map[string]bool) []*datapoint.Datapoint {
 	var dps []*datapoint.Datapoint
-	dps = append(dps, nodeStats.Jvm.fetchJVMStats(nodeStatsGroupEnhancedOption[JVMStatsGroup], defaultDims)...)
+	dps = append(dps, nodeStats.JVM.fetchJVMStats(nodeStatsGroupEnhancedOption[JVMStatsGroup], defaultDims)...)
 	dps = append(dps, nodeStats.Process.fetchProcessStats(nodeStatsGroupEnhancedOption[ProcessStatsGroup], defaultDims)...)
 	dps = append(dps, nodeStats.Transport.fetchTransportStats(nodeStatsGroupEnhancedOption[TransportStatsGroup], defaultDims)...)
 	dps = append(dps, nodeStats.HTTP.fetchHTTPStats(nodeStatsGroupEnhancedOption[HTTPStatsGroup], defaultDims)...)
@@ -34,7 +35,7 @@ func GetNodeStatsDatapointsHelper(nodeStats NodeStats, defaultDims map[string]st
 	return dps
 }
 
-func (jvm *Jvm) fetchJVMStats(enhanced bool, dims map[string]string) []*datapoint.Datapoint {
+func (jvm *JVM) fetchJVMStats(enhanced bool, dims map[string]string) []*datapoint.Datapoint {
 	var out []*datapoint.Datapoint
 
 	if enhanced {

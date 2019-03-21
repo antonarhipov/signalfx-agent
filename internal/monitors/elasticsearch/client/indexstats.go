@@ -1,30 +1,30 @@
 package client
 
-/*
- This nested struct contains all the index level stats of the following types
- and will be used to retrieve node level metrics
-*/
+//IndexStatsOutput contains all the index level stats of
+// the following types and will be used to retrieve node
+// level metrics
 type IndexStatsOutput struct {
 	Shards        Shards                `json:"_shards"`
 	AllIndexStats IndexStats            `json:"_all"`
 	Indices       map[string]IndexStats `json:"indices"`
 }
 
-// Info about shards of the index
+// Shards of the index
 type Shards struct {
 	Total      *int64 `json:"total"`
 	Successful *int64 `json:"successful"`
 	Failed     *int64 `json:"failed"`
 }
 
-// Holds stats from Primary shards or aggregate across all the shards
+// IndexStats holds stats from Primary shards or
+// aggregate across all the shards
 type IndexStats struct {
 	Primaries IndexStatsGroups `json:"primaries"`
 	Total     IndexStatsGroups `json:"total"`
 }
 
-// An exhaustive list of all groups of stats available across all supported
-// versions of Elasticsearch
+// IndexStatsGroups is a list of all groups of stats available
+// across all supported versions of Elasticsearch
 type IndexStatsGroups struct {
 	Docs         Docs         `json:"docs"`
 	Store        Store        `json:"store"`
@@ -43,27 +43,24 @@ type IndexStatsGroups struct {
 	Translog     Translog     `json:"translog"`
 	RequestCache RequestCache `json:"request_cache"`
 	Recovery     Recovery     `json:"recovery"`
-	IdCache      IdCache      `json:"id_cache"`
+	IDCache      IDCache      `json:"id_cache"`
 	Suggest      Suggest      `json:"suggest"`
 	Percolate    Percolate    `json:"percolate"`
 }
 
-// An exhaustive list of all Docs stats available across all supported
-// versions of Elasticsearch
+// Docs stats available across all supported versions of Elasticsearch
 type Docs struct {
 	Count   *int64 `json:"count"`
 	Deleted *int64 `json:"deleted"`
 }
 
-// An exhaustive list of all Store stats available across all supported
-// versions of Elasticsearch
+// Store stats available across all supported versions of Elasticsearch
 type Store struct {
 	SizeInBytes          *int64 `json:"size_in_bytes"`
 	ThrottleTimeInMillis *int64 `json:"throttle_time_in_millis"`
 }
 
-// An exhaustive list of all Indexing stats available across all supported
-// versions of Elasticsearch
+// Indexing stats available across all supportedversions of Elasticsearch
 type Indexing struct {
 	IndexTotal           *int64 `json:"index_total"`
 	IndexTimeInMillis    *int64 `json:"index_time_in_millis"`
@@ -77,8 +74,7 @@ type Indexing struct {
 	ThrottleTimeInMillis *int64 `json:"throttle_time_in_millis"`
 }
 
-// An exhaustive list of all Get stats available across all supported
-// versions of Elasticsearch
+// Get stats available across all supportedversions of Elasticsearch
 type Get struct {
 	Total               *int64 `json:"total"`
 	TimeInMillis        *int64 `json:"time_in_millis"`
@@ -89,8 +85,7 @@ type Get struct {
 	Current             *int64 `json:"current"`
 }
 
-// An exhaustive list of all Search stats available across all supported
-// versions of Elasticsearch
+// Search stats available across all supported versions of Elasticsearch
 type Search struct {
 	OpenContexts        *int64 `json:"open_contexts"`
 	QueryTotal          *int64 `json:"query_total"`
@@ -107,8 +102,7 @@ type Search struct {
 	SuggestCurrent      *int64 `json:"suggest_current"`
 }
 
-// An exhaustive list of all Merges stats available across all supported
-// versions of Elasticsearch
+// Merges stats available across all supportedversions of Elasticsearch
 type Merges struct {
 	Current                    *int64 `json:"current"`
 	CurrentDocs                *int64 `json:"current_docs"`
@@ -122,32 +116,29 @@ type Merges struct {
 	TotalAutoThrottleInBytes   *int64 `json:"total_auto_throttle_in_bytes"`
 }
 
-// An exhaustive list of all Refresh stats available across all supported
-// versions of Elasticsearch
+// Refresh stats available across all supported versions of Elasticsearch
 type Refresh struct {
 	Total             *int64 `json:"total"`
 	TotalTimeInMillis *int64 `json:"total_time_in_millis"`
 	Listeners         *int64 `json:"listeners"`
 }
 
-// An exhaustive list of all Flush stats available across all supported
-// versions of Elasticsearch
+// Flush stats available across all supported versions of Elasticsearch
 type Flush struct {
 	Total             *int64 `json:"total"`
 	Periodic          *int64 `json:"periodic"`
 	TotalTimeInMillis *int64 `json:"total_time_in_millis"`
 }
 
-// An exhaustive list of all Warmer stats available across all supported
-// versions of Elasticsearch
+// Warmer stats available across all supported versions of Elasticsearch
 type Warmer struct {
 	Current           *int64 `json:"current"`
 	Total             *int64 `json:"total"`
 	TotalTimeInMillis *int64 `json:"total_time_in_millis"`
 }
 
-// An exhaustive list of all QueryCache stats available across all supported
-// versions of Elasticsearch. Known as FilterCache until ES 2.0.
+// QueryCache stats available across all supported versions
+// of Elasticsearch. Known as FilterCache until ES 2.0.
 type QueryCache struct {
 	MemorySizeInBytes *int64 `json:"memory_size_in_bytes"`
 	TotalCount        *int64 `json:"total_count"`
@@ -158,8 +149,8 @@ type QueryCache struct {
 	Evictions         *int64 `json:"evictions"`
 }
 
-// An exhaustive list of all FilterCache stats available across all supported
-// versions of Elasticsearch. Known as QuertyCache after ES 2.0.
+// FilterCache stats available across all supported versions
+// of Elasticsearch. Known as QuertyCache after ES 2.0.
 type FilterCache struct {
 	MemorySizeInBytes *int64 `json:"memory_size_in_bytes"`
 	//TotalCount        *int64 `json:"total_count"`
@@ -170,21 +161,18 @@ type FilterCache struct {
 	Evictions *int64 `json:"evictions"`
 }
 
-// An exhaustive list of all Fielddata stats available across all supported
-// versions of Elasticsearch
+// Fielddata stats available across all supported versions of Elasticsearch
 type Fielddata struct {
 	MemorySizeInBytes *int64 `json:"memory_size_in_bytes"`
 	Evictions         *int64 `json:"evictions"`
 }
 
-// An exhaustive list of all Completion stats available across all supported
-// versions of Elasticsearch
+// Completion stats available across all supported versions of Elasticsearch
 type Completion struct {
 	SizeInBytes *int64 `json:"size_in_bytes"`
 }
 
-// An exhaustive list of all Segments stats available across all supported
-// versions of Elasticsearch
+// Segments stats available across all supported versions of Elasticsearch
 type Segments struct {
 	Count                       *int64 `json:"count"`
 	MemoryInBytes               *int64 `json:"memory_in_bytes"`
@@ -200,8 +188,7 @@ type Segments struct {
 	FixedBitSetMemoryInBytes    *int64 `json:"fixed_bit_set_memory_in_bytes"`
 }
 
-// An exhaustive list of all Translog stats available across all supported
-// versions of Elasticsearch
+// Translog stats available across all supported versions of Elasticsearch
 type Translog struct {
 	Operations              *int64 `json:"operations"`
 	SizeInBytes             *int64 `json:"size_in_bytes"`
@@ -210,8 +197,7 @@ type Translog struct {
 	EarliestLastModifiedAge *int64 `json:"earliest_last_modified_age"`
 }
 
-// An exhaustive list of all RequestCache stats available across all supported
-// versions of Elasticsearch
+// RequestCache stats available across all supported versions of Elasticsearch
 type RequestCache struct {
 	MemorySizeInBytes *int64 `json:"memory_size_in_bytes"`
 	Evictions         *int64 `json:"evictions"`
@@ -219,30 +205,29 @@ type RequestCache struct {
 	MissCount         *int64 `json:"miss_count"`
 }
 
-// An exhaustive list of all Recovery stats available across all supported
-// versions of Elasticsearch
+// Recovery stats available across all supported ersions of Elasticsearch
 type Recovery struct {
 	CurrentAsSource      *int64 `json:"current_as_source"`
 	CurrentAsTarget      *int64 `json:"current_as_target"`
 	ThrottleTimeInMillis *int64 `json:"throttle_time_in_millis"`
 }
 
-// An exhaustive list of all IdCache stats available across all supported
-// versions of Elasticsearch. Deprecated since ES 2.0.
-type IdCache struct {
+// IDCache stats available across all supported versions of
+// Elasticsearch. Deprecated since ES 2.0.
+type IDCache struct {
 	MemorySizeInBytes *int64 `json:"memory_size_in_bytes"`
 }
 
-// An exhaustive list of all Suggest stats available across all supported
-// versions of Elasticsearch. Deprecated since ES 2.0.
+// Suggest stats available across all supported versions of
+// Elasticsearch. Deprecated since ES 2.0.
 type Suggest struct {
 	Total        *int64 `json:"total"`
 	TimeInMillis *int64 `json:"time_in_millis"`
 	Current      *int64 `json:"current"`
 }
 
-// An exhaustive list of all Percolate stats available across all supported
-// versions of Elasticsearch. Deprecated since ES 5.0.
+// Percolate stats available across all supported versions
+// of Elasticsearch. Deprecated since ES 5.0.
 type Percolate struct {
 	Total             *int64 `json:"total"`
 	TimeInMillis      *int64 `json:"time_in_millis"`

@@ -69,7 +69,7 @@ func (m *Monitor) Configure(conf *Config) error {
 	m.ctx, m.cancel = context.WithCancel(context.Background())
 
 	utils.RunOnInterval(m.ctx, func() {
-		nodeStatsOutput, err, url := esClient.GetNodeAndThreadPoolStats()
+		nodeStatsOutput, url, err := esClient.GetNodeAndThreadPoolStats()
 
 		if err != nil {
 			logger.WithError(err).Errorf("Failed to GET node stats. URL: %s", url)

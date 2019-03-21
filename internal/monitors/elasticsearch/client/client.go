@@ -18,10 +18,12 @@ type esClient struct {
 	httpClient *http.Client
 }
 
+// ESHttpClient holds methods hitting various ES stats endpoints
 type ESHttpClient interface {
-	GetNodeAndThreadPoolStats() (*NodeStatsOutput, error, string)
+	GetNodeAndThreadPoolStats() (*NodeStatsOutput, string, error)
 }
 
+// NewESClient creates a new esClient
 func NewESClient(host string, port string, useHTTPS bool, username string, password string) ESHttpClient {
 	httpClient := &http.Client{}
 	scheme := "http"
@@ -41,23 +43,23 @@ func NewESClient(host string, port string, useHTTPS bool, username string, passw
 }
 
 // Method to fetch node stats
-func (c *esClient) GetNodeAndThreadPoolStats() (*NodeStatsOutput, error, string) {
+func (c *esClient) GetNodeAndThreadPoolStats() (*NodeStatsOutput, string, error) {
 	url := fmt.Sprintf("%s://%s:%s/%s", c.scheme, c.host, c.port, nodeStatsEndpoint)
 
 	body, err := get(url, c.username, c.password, *c.httpClient)
 
 	if err != nil {
-		return nil, err, url
+		return nil, url, err
 	}
 
 	var nodeStatsOutput NodeStatsOutput
 	err = json.Unmarshal(body, &nodeStatsOutput)
 
 	if err != nil {
-		return nil, err, url
+		return nil, url, err
 	}
 
-	return &nodeStatsOutput, nil, url
+	return &nodeStatsOutput, url, nil
 }
 
 // Fetches response from the given URL
