@@ -1,0 +1,508 @@
+- monitorType: gitlab
+  doc: |
+    GitLab is an open-source web-based git repository manager developed by
+    GitLab Inc. GitLab has built-in features for creating wiki pages,
+    issue-tracking and CI/CD pipelines. GitLab is bundled with [Prometheus
+    exporters](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html)
+    that can be configured to export performance metrics of itself and that of
+    the bundled software that GitLab depends on. These exporters publish
+    Prometheus metrics at endpoints are scraped by this monitor.
+
+    ### REQUIREMENTS AND DEPENDENCIES
+
+    | Software | Version |
+    |----------|---------|
+    | GitLab   | 9.3+    |
+
+    ### INSTALLATION
+
+    ### CONFIGURATION
+    #### GitLab Configuration
+
+    Follow the instructions
+    [here](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html)
+    to configure the GitLab's Prometheus exporters to expose metric endpoint
+    targets. For GitLab Runner monitoring configuration go
+    [here](https://docs.gitlab.com/runner/monitoring/README.html).
+
+    Note that configuring GitLab by editing `/etc/gitlab/gitlab.rb` should be
+    accompanied by running the command `gitlab-ctl reconfigure` in order for
+    the changes to take effect.
+
+    Also, configuring Nginx by editing the file
+    `/var/opt/gitlab/nginx/conf/nginx-status.conf`, for instance, should be
+    accompanied by running command `gitlab-ctl restart`. Note that changes to
+    the configuration file `/var/opt/gitlab/nginx/conf/nginx-status.conf` in
+    particular are erased by subsequent runs of command `gitlab-ctl
+    reconfigure` because `gitlab-ctl reconfigure` restores the original
+    configuration file.
+
+    Below is a list of some of the Prometheus endpoint targets with links to
+    their respective configuration pages. Note that target `gitlab_monitor`
+    metrics are just targets `gitlab_monitor_database`,
+    `gitlab_monitor_process` and `gitlab_monitor_sidekiq` metrics combined.
+
+    | Target                                                     | Default Port | Path       |
+    |------------------------------------------------------------|--------------|------------|
+    | [gitaly](https://docs.gitlab.com/ee/administration/gitaly/#doc-nav) | 9236 | /metrics |
+    | [gitlab-sidekiq](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html) | 8082 | /metrics |
+    | [gitlab-unicorn](https://docs.gitlab.com/ee/administration/monitoring/prometheus/gitlab_metrics.html#unicorn-metrics-available) | 8080 | /-/metrics |
+    | [gitlab-workhorse](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html) | 9229 | /metrics |
+    | [gitlab_monitor_database](https://docs.gitlab.com/ee/administration/monitoring/prometheus/gitlab_monitor_exporter.html) | 9168 | /database |
+    | [gitlab_monitor_process](https://docs.gitlab.com/ee/administration/monitoring/prometheus/gitlab_monitor_exporter.html) | 9168 | /process |
+    | [gitlab_monitor_sidekiq](https://docs.gitlab.com/ee/administration/monitoring/prometheus/gitlab_monitor_exporter.html) | 9168 | /sidekiq |
+    | [gitlab_monitor](https://docs.gitlab.com/ee/administration/monitoring/prometheus/gitlab_monitor_exporter.html) | 9168 | /metrics |
+    | [nginx](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html) | 8060 | /metrics |
+    | [node](https://docs.gitlab.com/ee/administration/monitoring/prometheus/node_exporter.html) | 9100 | /metrics |
+    | [postgres](https://docs.gitlab.com/ee/administration/monitoring/prometheus/postgres_exporter.html) | 9187 | /metrics |
+    | [prometheus](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html) | 9090 | /metrics |
+    | [redis](https://docs.gitlab.com/ee/administration/monitoring/prometheus/redis_exporter.html) | 9121 | /metrics |
+    | [gitlab-runner](https://docs.gitlab.com/ee/administration/monitoring/prometheus/index.html) | 9252 | /metrics |
+
+    GitLab Prometheus exporters, Nginx and GitLab Runner must be configured to
+    listen to IP address(es) that include the IP address of the host or docker
+    container of the SignalFx Smart Agent. For example, the configuration below
+    in `/etc/gitlab/gitlab.rb` configures the GitLab Postgres Prometheus
+    exporter to allow network connections on port `9187` from any IP address.
+
+    ```
+    postgres_exporter['listen_address'] = '0.0.0.0:9187'
+    ```
+
+    The above configuration can also be written as:
+
+    ```
+    postgres_exporter['listen_address'] = ':9187'
+    ```
+
+    Below is part of file `/var/opt/gitlab/nginx/conf/nginx-status.conf`
+    showing the `location /metrics` block for metric related configuration.
+    This file configures Nginx. The statement `allow 172.17.0.0/16;` allows
+    network connection in the `172.17.0.0/16` IP range. The assumption is that
+    the IP address associated with the SignalFx Smart Agent is in that IP
+    range.
+
+    ```
+    server {
+        ...
+        location /metrics {
+        ...
+        allow 172.17.0.0/16;
+        deny all;
+        }
+    }
+    ```
+
+    Below is part of the global section of `/etc/gitlab-runner/config.toml`. This file configures GitLab Runner. The statement below configures GitLab Runner's Prometheus metrics HTTP server to allows network connection on port `9252` from any IP address.
+
+    ```
+    listen_address = "0.0.0.0:9252"
+    ...
+    ```
+
+    For the `gitlab-unicorn` target, the IP address of the SignalFx Smart Agent container or host depending on the environment, needs to be whitelisted as described [here](https://docs.gitlab.com/ee/administration/monitoring/ip_whitelist.html) in order for the agent to access the endpoint.
+  metrics:
+  - name: gitaly_authentications
+    type: counter
+    description: Counts of of Gitaly request authentication attempts
+  - name: gitaly_connections_total
+    type: counter
+    description: Total number of connections accepted by this Gitaly process
+  - name: gitaly_service_client_requests
+    type: counter
+    description: Counter of client requests received by client, call_site, auth version, and response code
+  - name: gitaly_smarthttp_deepen_count
+    type: counter
+    description: Number of git-upload-pack requests processed that contained a 'deepen' message
+  - name: gitaly_spawn_timeout_count
+    type: counter
+    description: Number of process spawn timeouts
+  - name: gitaly_supervisor_health_checks
+    type: counter
+    description: Count of Gitaly supervisor health checks
+  - name: gitaly_supervisor_rss_bytes
+    type: gauge
+    description: Resident set size of supervised processes, in bytes
+  - name: gitaly_supervisor_starts_total
+    type: counter
+    description: Number of starts of supervised processes
+  - name: gitlab_build_info
+    type: gauge
+    description: Current build info for this GitLab Service
+  - name: grpc_server_handled_total
+    type: counter
+    description: Total number of RPCs completed on the server, regardless of success or failure
+  - name: grpc_server_msg_received_total
+    type: counter
+    description: Total number of RPC stream messages received on the server
+  - name: grpc_server_msg_sent_total
+    type: counter
+    description: Total number of gRPC stream messages sent by the server
+  - name: grpc_server_started_total
+    type: counter
+    description: Total number of RPCs started on the server
+  - name: ci_stale_builds
+    type: gauge
+    description: ci_stale_builds metric
+  - name: gitlab_database_rows
+    type: gauge
+  - name: process_memory_bytes
+    type: gauge
+    description: process_memory_bytes metric
+  - name: process_age_seconds
+    type: gauge
+    description: process_age_seconds metric
+  - name: process_count
+    type: gauge
+    description: process_count metric
+  - name: sidekiq_queue_size
+    type: gauge
+    description: sidekiq_queue_size metric
+  - name: sidekiq_queue_latency
+    type: gauge
+    description: sidekiq_queue_latency metric
+  - name: sidekiq_dead_jobs_total
+    type: gauge
+    description: sidekiq_dead_jobs_total metric
+  - name: gitaly_controller_action_duration_seconds_bucket
+    type: counter
+    description: Multiprocess metric
+  - name: gitaly_controller_action_duration_seconds_count
+    type: counter
+    description: Multiprocess metric
+  - name: gitaly_controller_action_duration_seconds_sum
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_projects_with_jid
+    type: gauge
+    description: Multiprocess metric
+  - name: gitlab_projects_without_jid
+    type: gauge
+    description: Multiprocess metric
+  - name: gitlab_repository_archive_clean_up_real_duration_seconds_bucket
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_repository_archive_clean_up_real_duration_seconds_count
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_repository_archive_clean_up_real_duration_seconds_sum
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_stuck_import_jobs_worker_runs_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_transaction_sidekiq_queue_duration_total
+    type: gauge
+    description: Multiprocess metric
+  - name: gitlab_runner_api_request_statuses_total
+    type: counter
+    description: The total number of API requests, partitioned by runner, endpoint and status
+  - name: gitlab_runner_autoscaling_machine_creation_duration_seconds_bucket
+    type: counter
+    description: Histogram of machine creation time
+  - name: gitlab_runner_autoscaling_machine_creation_duration_seconds_sum
+    type: counter
+    description: Histogram of machine creation time
+  - name: gitlab_runner_autoscaling_machine_creation_duration_seconds_count
+    type: counter
+    description: Histogram of machine creation time
+  - name: gitlab_runner_autoscaling_machine_states
+    type: gauge
+    description: The current number of machines per state in this provider
+  - name: gitlab_runner_concurrent
+    type: gauge
+    description: The current value of concurrent setting
+  - name: gitlab_runner_errors_total
+    type: counter
+    description: The number of catched errors
+  - name: gitlab_runner_limit
+    type: gauge
+    description: The current value of concurrent setting
+  - name: gitlab_runner_request_concurrency
+    type: gauge
+    description: The current number of concurrent requests for a new job
+  - name: gitlab_runner_request_concurrency_exceeded_total
+    type: counter
+    description: Counter tracking exceeding of request concurrency
+  - name: gitlab_runner_version_info
+    type: gauge
+    description: A metric with a constant '1' value labeled by different build stats fields
+  - name: gitlab_workhorse_builds_register_handler_open
+    type: gauge
+    description: Describes how many requests is currently open in given state
+  - name: gitlab_workhorse_builds_register_handler_requests
+    type: counter
+    description: Describes how many requests in different states hit a register handler
+  - name: gitlab_workhorse_git_http_sessions_active
+    type: gauge
+    description: Number of Git HTTP request-response cycles currently being handled by gitlab-workhorse
+  - name: gitlab_workhorse_http_in_flight_requests
+    type: gauge
+    description: A gauge of requests currently being served by workhorse
+  - name: gitlab_workhorse_http_request_duration_seconds_bucket
+    type: counter
+    description: A histogram of latencies for requests to workhorse
+  - name: gitlab_workhorse_http_request_duration_seconds_sum
+    type: counter
+    description: A histogram of latencies for requests to workhorse
+  - name: gitlab_workhorse_http_request_duration_seconds_count
+    type: counter
+    description: A histogram of latencies for requests to workhorse
+  - name: gitlab_workhorse_http_request_size_bytes_bucket
+    type: counter
+    description: A histogram of sizes of requests to workhorse
+  - name: gitlab_workhorse_http_request_size_bytes_sum
+    type: counter
+    description: A histogram of sizes of requests to workhorse
+  - name: gitlab_workhorse_http_request_size_bytes_count
+    type: counter
+    description: A histogram of sizes of requests to workhorse
+  - name: gitlab_workhorse_http_requests_total
+    type: counter
+    description: A counter for requests to workhorse
+  - name: gitlab_workhorse_http_time_to_write_header_seconds_bucket
+    type: counter
+    description: A histogram of request durations until the response headers are written
+  - name: gitlab_workhorse_http_time_to_write_header_seconds_sum
+    type: counter
+    description: A histogram of request durations until the response headers are written
+  - name: gitlab_workhorse_http_time_to_write_header_seconds_count
+    type: counter
+    description: A histogram of request durations until the response headers are written
+  - name: gitlab_workhorse_internal_api_failure_response_bytes
+    type: counter
+    description: How many bytes have been returned by upstream GitLab in API failure/rejection response bodies
+  - name: gitlab_workhorse_keywatcher_keywatchers
+    type: gauge
+    description: The number of keys that is being watched by gitlab-workhorse
+  - name: gitlab_workhorse_keywather_total_messages
+    type: counter
+    description: How many messages gitlab-workhorse has received in total on pubsub
+  - name: gitlab_workhorse_object_storage_upload_bytes
+    type: counter
+    description: How many bytes were sent to object storage
+  - name: gitlab_workhorse_object_storage_upload_open
+    type: gauge
+    description: Describes many object storage requests are open now
+  - name: gitlab_workhorse_object_storage_upload_requests
+    type: counter
+    description: How many object storage requests have been processed
+  - name: gitlab_workhorse_redis_errors
+    type: counter
+    description: Counts different types of Redis errors encountered by workhorse, by type and destination (redis, sentinel)
+  - name: gitlab_workhorse_redis_total_connections
+    type: counter
+    description: How many connections gitlab-workhorse has opened in total. Can be used to track Redis connection rate for this process
+  - name: gitlab_workhorse_send_url_bytes
+    type: counter
+    description: How many bytes were passed with send URL
+  - name: gitlab_workhorse_send_url_open_requests
+    type: gauge
+    description: Describes how many send URL requests are open now
+  - name: gitlab_workhorse_send_url_requests
+    type: counter
+    description: How many send URL requests have been processed
+  - name: gitlab_workhorse_static_error_responses
+    type: counter
+    description: How many HTTP responses have been changed to a static error page, by HTTP status code.
+  - name: net_conntrack_dialer_conn_attempted_total
+    type: counter
+    description: Total number of connections attempted by the given dialer a given name
+  - name: net_conntrack_dialer_conn_closed_total
+    type: counter
+    description: Total number of connections closed which originated from the dialer of a given name
+  - name: net_conntrack_dialer_conn_established_total
+    type: counter
+    description: Total number of connections successfully established by the given dialer a given name
+  - name: net_conntrack_dialer_conn_failed_total
+    type: counter
+    description: Total number of connections failed to dial by the dialer a given name
+  - name: net_conntrack_listener_conn_accepted_total
+    type: counter
+    description: Total number of connections opened to the listener of a given name
+  - name: net_conntrack_listener_conn_closed_total
+    type: counter
+    description: Total number of connections closed that were made to the listener of a given name
+  - name: gitlab_auth_user_authenticated_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_auth_user_unauthenticated_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_banzai_cacheless_render_real_duration_seconds_bucket
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_banzai_cacheless_render_real_duration_seconds_count
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_banzai_cacheless_render_real_duration_seconds_sum
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_cache_misses_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_cache_operation_duration_seconds_bucket
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_cache_operation_duration_seconds_count
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_cache_operation_duration_seconds_sum
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_rails_queue_duration_seconds_bucket
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_rails_queue_duration_seconds_count
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_rails_queue_duration_seconds_sum
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_sql_duration_seconds_bucket
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_sql_duration_seconds_count
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_sql_duration_seconds_sum
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_transaction_cache_read_hit_count_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_transaction_cache_read_miss_count_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_transaction_duration_seconds_bucket
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_transaction_duration_seconds_count
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_transaction_duration_seconds_sum
+    type: histogram
+    description: Multiprocess metric
+  - name: gitlab_transaction_new_redis_connections_total
+    type: counter
+    description: Multiprocess metric
+  - name: gitlab_transaction_rails_queue_duration_total
+    type: gauge
+    description: Multiprocess metric
+  - name: gitlab_transaction_view_duration_total
+    type: counter
+    description: Multiprocess metric
+  - name: http_request_duration_seconds_bucket
+    type: histogram
+    description: Multiprocess metric
+  - name: http_request_duration_seconds_count
+    type: histogram
+    description: Multiprocess metric
+  - name: http_request_duration_seconds_sum
+    type: histogram
+    description: Multiprocess metric
+  - name: http_requests_total
+    type: counter
+    description: Multiprocess metric
+  - name: job_register_attempts_failed_total
+    type: counter
+    description: Multiprocess metric
+  - name: job_register_attempts_total
+    type: counter
+    description: Multiprocess metric
+  - name: ruby_file_descriptors
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_duration_seconds_total
+    type: counter
+    description: Multiprocess metric
+  - name: ruby_gc_stat_count
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_allocatable_pages
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_allocated_pages
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_available_slots
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_eden_pages
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_final_slots
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_free_slots
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_live_slots
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_marked_slots
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_sorted_length
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_heap_tomb_pages
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_major_gc_count
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_malloc_increase_bytes
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_malloc_increase_bytes_limit
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_minor_gc_count
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_old_objects
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_old_objects_limit
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_oldmalloc_increase_bytes
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_oldmalloc_increase_bytes_limit
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_remembered_wb_unprotected_objects
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_remembered_wb_unprotected_objects_limit
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_total_allocated_objects
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_total_allocated_pages
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_total_freed_objects
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_gc_stat_total_freed_pages
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_memory_bytes
+    type: gauge
+    description: Multiprocess metric
+  - name: ruby_sampler_duration_seconds_total
+    type: counter
+    description: Multiprocess metric
+  - name: unicorn_active_connections
+    type: gauge
+    description: Multiprocess metric
+  - name: unicorn_queued_connections
+    type: gauge
+    description: Multiprocess metric
+  - name: user_session_logins_total
+    type: counter
+    description: Multiprocess metric

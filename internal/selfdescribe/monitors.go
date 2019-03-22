@@ -1,15 +1,16 @@
 package selfdescribe
 
 import (
-	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
 	"go/doc"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
 	"sort"
+
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
+	"gopkg.in/yaml.v2"
 
 	"github.com/signalfx/signalfx-agent/internal/monitors"
 )
@@ -81,6 +82,8 @@ func monitorsStructMetadata() []monitorMetadata {
 			t := reflect.TypeOf(monitors.ConfigTemplates[monType]).Elem()
 			monTypesSeen[monType] = true
 
+			logDuplicateMetrics(path, monitor.Metrics)
+
 			mc, _ := t.FieldByName("MonitorConfig")
 			mmd := monitorMetadata{
 				structMetadata:   getStructMetadata(t),
@@ -127,4 +130,15 @@ func dimensionsFromNotes(allDocs []*doc.Package) []dimMetadata {
 		return dm[i].Name < dm[j].Name
 	})
 	return dm
+}
+
+func logDuplicateMetrics(path string, metrics []metricMetadata) {
+	seen := map[string]bool{}
+
+	for i := range metrics {
+		if seen[metrics[i].Name] {
+			log.Errorf("duplicate metric '%s' found in %s", metrics[i].Name, path)
+		}
+		seen[metrics[i].Name] = true
+	}
 }

@@ -57,10 +57,6 @@
     included: false
     name: cpu.percpu.usage
     type: cumulative
-  - description: Jiffies of CPU time spent by the container, per CPU core
-    included: false
-    name: cpu.percpu.usage
-    type: cumulative
   - description: Number of periods
     included: false
     name: cpu.throttling_data.periods
