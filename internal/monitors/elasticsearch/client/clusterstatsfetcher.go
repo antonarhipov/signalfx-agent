@@ -7,7 +7,7 @@ import (
 const (
 	clusterStatusGreen = "green"
 	clusterStatusYellow = "yellow"
-	clsuterStatusRed = "red"
+	clusterStatusRed = "red"
 )
 
 // GetClusterStatsDatapoints fetches datapoints for ES cluster level stats
@@ -38,21 +38,20 @@ func GetClusterStatsDatapoints(clusterStatsOutput *ClusterStatsOutput, defaultDi
 
 // Map cluster status to a numeric value
 func getMetricValueFromClusterStatus(s *string) *int64 {
+	// For whatever ever reason if the monitor did not get cluster status return nil
+	if s == nil {
+		return nil
+	}
 	out := new(int64)
 	status := *s
 
 	switch status {
 	case clusterStatusGreen:
 		*out = 0
-		break
 	case clusterStatusYellow:
 		*out = 1
-		break
-	case clsuterStatusRed:
+	case clusterStatusRed:
 		*out = 2
-		break
-	default:
-		break
 	}
 
 	return out

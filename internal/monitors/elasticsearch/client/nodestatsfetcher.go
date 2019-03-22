@@ -163,3 +163,125 @@ func (http *HTTP) fetchHTTPStats(enhanced bool, dims map[string]string) []*datap
 
 	return out
 }
+
+func (http *IndexStatsGroups) fetchNodeIndexGroupStats() []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+	return out
+}
+
+func (docs *Docs) fetchDocsStats(defaultDims map[string]string) []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+
+	out = append(out, []*datapoint.Datapoint{
+		prepareGaugeHelper("gauge.indices.docs.count", defaultDims, docs.Count),
+		prepareGaugeHelper("gauge.indices.docs.deleted", defaultDims, docs.Deleted),
+	}...)
+
+	return out
+}
+
+func (store *Store) fetchStoreStats(enhanced bool, defaultDims map[string]string) []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+
+	if enhanced {
+		out = append(out, []*datapoint.Datapoint{
+			prepareCumulativeHelper("counter.indices.store.throttle-time", defaultDims, store.ThrottleTimeInMillis),
+		}...)
+	}
+
+	out = append(out, []*datapoint.Datapoint{
+		prepareGaugeHelper("gauge.indices.store.size", defaultDims, store.SizeInBytes),
+	}...)
+
+	return out
+}
+
+func (indexing Indexing) fetchIndexingStats(enhanced bool, defaultDims map[string]string) []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+
+	if enhanced {
+		out = append(out, []*datapoint.Datapoint{
+			prepareGaugeHelper("gauge.indices.indexing.index-current", defaultDims, indexing.IndexCurrent),
+			prepareGaugeHelper("gauge.indices.indexing.delete-current", defaultDims, indexing.DeleteCurrent),
+			prepareCumulativeHelper("counter.indices.indexing.index-time", defaultDims, indexing.IndexTimeInMillis),
+			prepareCumulativeHelper("counter.indices.indexing.delete-total", defaultDims, indexing.DeleteTotal),
+			prepareCumulativeHelper("counter.indices.indexing.delete-time", defaultDims, indexing.DeleteTimeInMillis),
+		}...)
+	}
+
+	out = append(out, []*datapoint.Datapoint{
+		prepareCumulativeHelper("counter.indices.indexing.index-total", defaultDims, indexing.IndexTotal),
+	}...)
+
+	return out
+}
+
+func (get *Get) fetchGetStats(enhanced bool, defaultDims map[string]string) []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+
+	if enhanced {
+		out = append(out, []*datapoint.Datapoint{
+			prepareGaugeHelper("gauge.indices.get.current", defaultDims, get.Current),
+			prepareCumulativeHelper("counter.indices.get.time", defaultDims, get.TimeInMillis),
+			prepareCumulativeHelper("counter.indices.get.exists-total", defaultDims, get.ExistsTotal),
+			prepareCumulativeHelper("counter.indices.get.exists-time", defaultDims, get.ExistsTimeInMillis),
+			prepareCumulativeHelper("counter.indices.get.missing-total", defaultDims, get.MissingTotal),
+			prepareCumulativeHelper("counter.indices.get.missing-time", defaultDims, get.MissingTimeInMillis),
+		}...)
+	}
+
+	out = append(out, []*datapoint.Datapoint{
+		prepareCumulativeHelper("counter.indices.get.total", defaultDims, get.Total),
+	}...)
+
+	return out
+}
+
+func (search *Search) fetchSearchStats(enhanced bool, defaultDims map[string]string) []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+
+	if enhanced {
+		out = append(out, []*datapoint.Datapoint{
+			prepareGaugeHelper("gauge.indices.search.query-current", defaultDims, search.QueryCurrent),
+			prepareGaugeHelper("gauge.indices.search.fetch-current", defaultDims, search.FetchCurrent),
+			prepareGaugeHelper("gauge.indices.search.scroll-current", defaultDims, search.ScrollCurrent),
+			prepareGaugeHelper("gauge.indices.search.suggest-current", defaultDims, search.SuggestCurrent),
+			prepareCumulativeHelper("counter.indices.search.fetch-time", defaultDims, search.FetchTimeInMillis),
+			prepareCumulativeHelper("counter.indices.search.fetch-total", defaultDims, search.FetchTotal),
+			prepareCumulativeHelper("counter.indices.search.scroll-time", defaultDims, search.ScrollTimeInMillis),
+			prepareCumulativeHelper("counter.indices.search.scroll-total", defaultDims, search.ScrollTotal),
+			prepareCumulativeHelper("counter.indices.search.suggest-time", defaultDims, search.SuggestTimeInMillis),
+			prepareCumulativeHelper("counter.indices.search.suggest-total", defaultDims, search.SuggestTotal),
+		}...)
+	}
+
+	out = append(out, []*datapoint.Datapoint{
+		prepareCumulativeHelper("counter.indices.search.query-time", defaultDims, search.QueryTimeInMillis),
+		prepareCumulativeHelper("counter.indices.search.query-total", defaultDims, search.QueryTotal),
+	}...)
+
+	return out
+}
+
+func (merges *Merges) fetchMergesStats(enhanced bool, defaultDims map[string]string) []*datapoint.Datapoint {
+	var out []*datapoint.Datapoint
+
+	if enhanced {
+		out = append(out, []*datapoint.Datapoint{
+			prepareGaugeHelper("gauge.indices.merges.current-docs", defaultDims, merges.CurrentDocs),
+			prepareGaugeHelper("gauge.indices.merges.current-size", defaultDims, merges.CurrentSizeInBytes),
+			prepareCumulativeHelper("counter.indices.merges.total-docs", defaultDims, merges.TotalDocs),
+			prepareCumulativeHelper("counter.indices.merges.total-size", defaultDims, merges.TotalSizeInBytes),
+			prepareCumulativeHelper("counter.indices.merges.time", defaultDims, merges.TotalTimeInMillis),
+			prepareCumulativeHelper("counter.indices.merges.stopped-time", defaultDims, merges.TotalStoppedTimeInMillis),
+			prepareCumulativeHelper("counter.indices.merges.throttle-time", defaultDims, merges.TotalThrottledTimeInMillis),
+			prepareCumulativeHelper("counter.indices.merges.auto-throttle-size", defaultDims, merges.TotalAutoThrottleInBytes),
+		}...)
+	}
+
+	out = append(out, []*datapoint.Datapoint{
+		prepareGaugeHelper("gauge.indices.merges.current", defaultDims, merges.Current),
+		prepareCumulativeHelper("counter.indices.merges.total", defaultDims, merges.Total),
+	}...)
+	return out
+}

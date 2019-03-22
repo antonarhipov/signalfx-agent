@@ -70,7 +70,6 @@ type Indexing struct {
 	DeleteTimeInMillis   *int64 `json:"delete_time_in_millis"`
 	DeleteCurrent        *int64 `json:"delete_current"`
 	NoopUpdateTotal      *int64 `json:"noop_update_total"`
-	IsThrottled          bool   `json:"is_throttled"`
 	ThrottleTimeInMillis *int64 `json:"throttle_time_in_millis"`
 }
 
