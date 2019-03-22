@@ -10,6 +10,8 @@ import (
 const (
 	nodeStatsEndpoint = "_nodes/_local/stats/transport,http,process,jvm,indices,thread_pool"
 	clusterHealthStatsEndpoint = "_cluster/health"
+	nodeInfoEndpoint = "_nodes/_local"
+	masterNodeEndpoint = "_cluster/state/master_node"
 )
 
 type esClient struct {
@@ -25,6 +27,8 @@ type esClient struct {
 type ESHttpClient interface {
 	GetNodeAndThreadPoolStats() (*NodeStatsOutput, error)
 	GetClusterStats() (*ClusterStatsOutput, error)
+	GetNodeInfo() (*NodeInfoOutput, error)
+	GetMasterNodeInfo() (*MasterInfoOutput, error)
 }
 
 // NewESClient creates a new esClient
@@ -44,6 +48,46 @@ func NewESClient(host string, port string, useHTTPS bool, username string, passw
 		password:   password,
 		httpClient: httpClient,
 	}
+}
+
+// Method to identify the master node
+func (c *esClient) GetMasterNodeInfo() (*MasterInfoOutput, error) {
+	url := fmt.Sprintf("%s://%s:%s/%s", c.scheme, c.host, c.port, masterNodeEndpoint)
+
+	body, err := get(url, c.username, c.password, *c.httpClient)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var masterInfoOutput MasterInfoOutput
+	err = json.Unmarshal(body, &masterInfoOutput)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &masterInfoOutput, nil
+}
+
+// Method to fetch node info
+func (c *esClient) GetNodeInfo() (*NodeInfoOutput, error) {
+	url := fmt.Sprintf("%s://%s:%s/%s", c.scheme, c.host, c.port, nodeInfoEndpoint)
+
+	body, err := get(url, c.username, c.password, *c.httpClient)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var nodeInfoOutput NodeInfoOutput
+	err = json.Unmarshal(body, &nodeInfoOutput)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &nodeInfoOutput, nil
 }
 
 // Method to fetch cluster stats

@@ -72,6 +72,31 @@ func (m *Monitor) Configure(conf *Config) error {
 	m.ctx, m.cancel = context.WithCancel(context.Background())
 
 	utils.RunOnInterval(m.ctx, func() {
+		// Collect node info
+		nodeInfoOutput, err := esClient.GetNodeInfo()
+
+		if err != nil {
+			logger.WithError(err).Errorf("Failed to GET node info")
+			return
+		}
+
+		clusterName := nodeInfoOutput.ClusterName
+
+		// Collect info about master for the cluster
+		masterInfoOutput, err := esClient.GetMasterNodeInfo()
+
+		if err != nil {
+			logger.WithError(err).Errorf("Failed to GET master node info")
+			return
+		}
+
+		isCurrentMaster, err := isCurrentMaster(nodeInfoOutput.Nodes, masterInfoOutput)
+
+		if err != nil {
+			logger.WithError(err).Errorf("Error while determining whether current node is a master")
+			return
+		}
+
 		// Collect Node level stats
 		nodeStatsOutput, err := esClient.GetNodeAndThreadPoolStats()
 
@@ -80,7 +105,7 @@ func (m *Monitor) Configure(conf *Config) error {
 			return
 		}
 
-		pluginInstanceDimension, err := prepareClusterDimension(conf.Cluster, nodeStatsOutput.ClusterName)
+		pluginInstanceDimension, err := prepareDefaultDimensions(conf.Cluster, clusterName)
 
 		if err != nil {
 			logger.WithError(err).Errorf("Failed to prepare plugin_instance dimension")
@@ -95,6 +120,11 @@ func (m *Monitor) Configure(conf *Config) error {
 			client.ThreadpoolStatsGroup: conf.EnableEnhancedThreadPoolStats,
 			client.TransportStatsGroup:  conf.EnableEnhancedTransportStats,
 		})
+
+		// If current node is not the master, collect only node level stats
+		if !isCurrentMaster {
+			return
+		}
 
 		// Collect cluster level stats
 		clusterStatsOutput, err := esClient.GetClusterStats()
@@ -118,7 +148,7 @@ func (m *Monitor) Configure(conf *Config) error {
 }
 
 // Prepares dimensions that are common to all datapoints from the monitor
-func prepareClusterDimension(userProvidedClusterName string, queriedClusterName *string) (map[string]string, error) {
+func prepareDefaultDimensions(userProvidedClusterName string, queriedClusterName *string) (map[string]string, error) {
 	dims := map[string]string{}
 	clusterName := userProvidedClusterName
 
@@ -132,10 +162,45 @@ func prepareClusterDimension(userProvidedClusterName string, queriedClusterName 
 	// "plugin_instance" dimension is added to maintain backwards compatibility with built-in content
 	dims["plugin_instance"] = clusterName
 	dims["cluster"] = clusterName
+	dims["plugin"] = monitorType
 
 	return dims, nil
 }
 
+func isCurrentMaster(nodes map[string]client.NodeInfo, masterInfoOutput *client.MasterInfoOutput) (bool, error) {
+	var isCurrentMaster bool
+
+	nodeID := getNodeID(nodes)
+
+	if nodeID == nil {
+		return isCurrentMaster, errors.New("Unable to GET Elasticsearch node_id")
+	}
+
+	masterNode := masterInfoOutput.MasterNode
+
+	if masterNode == nil {
+		logger.Warn("Unable to identify Elasticsearch cluster master node. Assuming current node is not the current master.")
+		return isCurrentMaster, nil
+	}
+
+	if *nodeID == *masterNode {
+		isCurrentMaster = true
+	}
+
+	return isCurrentMaster, nil
+}
+
+func getNodeID(nodes map[string]client.NodeInfo) *string {
+	var out *string
+
+	// nodes will have exactly one entry, for the current node since the monitor hits "_nodes/_local" endpoint
+	for nodeID := range nodes {
+		out = new(string)
+		*out = nodeID
+	}
+
+	return out
+}
 // Shutdown stops the metric sync
 func (m *Monitor) Shutdown() {
 	if m.cancel != nil {
